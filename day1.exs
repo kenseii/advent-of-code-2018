@@ -6,10 +6,18 @@ defmodule Day1 do
   def final_frequency(input) do
     # input read from the file
     input
-    |> Stream.map(fn line ->
+    |> Enum.map(fn line ->
       {integer, _leftover} = Integer.parse(line)
       integer end)
-    |> Enum.sum()
+    |> Stream.cycle()
+    |> Enum.reduce_while({0, [0]}, fn x, {current_frequency, seen_frequencies} ->
+      new_frequency = current_frequency + x
+      if new_frequency in seen_frequencies do
+        {:halt, new_frequency}
+      else
+        {:cont, {new_frequency, [new_frequency | seen_frequencies]}}
+      end
+    end )
   end
 
 end
@@ -26,14 +34,12 @@ case System.argv() do
       import Day1
 
       test "verify the final frequency" do
-        # build an io device to be read as a file
-        {:ok, io} = StringIO.open("""
-        +7
-        +8
-        -8
-        """)
-        # load the io as a stream and check the value
-        assert final_frequency(IO.stream(io, :line)) == 7
+        assert final_frequency([
+        "+1\n",
+        "-2\n",
+        "+3\n",
+        "+1\n"
+        ]) == 2
 
       end
     end
