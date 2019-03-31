@@ -6,23 +6,14 @@ defmodule Day1 do
   def final_frequency(input) do
     # input read from the file
     input
-    |> String.split("\n", trim: true)
-    |> sum_lines(0)
-  end
-
-  defp sum_lines([line | lines], current_frequency) do
-    new_frequency = String.to_integer(line) + current_frequency
-    sum_lines(lines, new_frequency)
-  end
-
-  # in case we have an empty list
-  defp sum_lines([], current_frequency) do
-    current_frequency
+    |> Stream.map(fn line ->
+      {integer, _leftover} = Integer.parse(line)
+      integer end)
+    |> Enum.sum()
   end
 
 end
-
-# only run the tests if i a pass the --test flag
+# only run the tests if i a pass the --test flag, receive input file as a flag, and in case there is no input show a message
 
 case System.argv() do
   ["--test"] ->
@@ -31,23 +22,26 @@ case System.argv() do
     ExUnit.start()
 
     defmodule Day1Test do
-
+      use ExUnit.Case
       import Day1
 
-      use ExUnit.Case
       test "verify the final frequency" do
-        assert final_frequency("""
-          +7
-          +8
-          -8
-          """) == 7
+        # build an io device to be read as a file
+        {:ok, io} = StringIO.open("""
+        +7
+        +8
+        -8
+        """)
+        # load the io as a stream and check the value
+        assert final_frequency(IO.stream(io, :line)) == 7
 
       end
     end
   # in case the input file is supplied
   [input_file] ->
       input_file
-      |> File.read!()
+      # read the file line by line instead of loading everything in the memory
+      |> File.stream!([], :line)
       |> Day1.final_frequency()
       |> IO.puts()
 
